@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500&display=swap');
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Shippori Mincho', serif;}
+.box{
+    display: grid;
+     grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-areas:
+    "icon icon title title title";
+    grid-template-rows: 10% 10% 60% 10% 10%;
+
+
+}
+img{
+    width: 150px;
+    grid-area: icon;
+}
+h1{
+    grid-area: title;
+    font-size: 60px;
+    color: #ffffff;
+}

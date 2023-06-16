@@ -1,0 +1,315 @@
+*crear una carpeta donde se guardaran los archivos
+*habrir el cmd en la carpeta
+*crear un entorno virtual con el comando:
+-pyrhon -m venv venv
+*abrir el code con el comando
+-code .
+*luego activar el entorno virtual de la sigueinte manera:
+-entrar a la carpeta del entrono
+-entrar a la carpeta Script
+-poner activate
+*crear el proyecto django con el comando:
+-django-admin startproject comcepcionario
+*luego ingresar a la carpeta
+-cd comcepcionario
+-pip install django
+*para correr el servidor poner el comando:
+-python manage.py runserver
+
+
+//--------------------//
+ahora pasamos a crear las aplicaciones:
+
+*se crea una carpeta con el nombre Apps con el comando:
+-mkdir Apps
+*ingresamos a la carpeta:
+-cd Apps
+*creamos las tablas de la base de datos con el comando:
+-django-admin startapp nombre_de_la_tabla
+*luego entramos a la tabla que se creo y nos dirijimos al archivo app en el studio code:
+*cambiamos el nombre de clientes por Apps.clientes
+*luego ingresamos a la siguiente ruta desde el studio code:
+-sitealmacen/sitealmacen/settings.py
+*buscaremos la definicion Installed_APPS
+y al final pondremos una nueva linea de codigo con lo siguiente:
+-    'Apps.clientes.apps.ClientesConfig', => donde clientes es elnombre de la tabla
+*luego creamos las url
+-ingresamos al archivo urls.py de la carpeta con el nombre de la carpeta padre
+-importamos lo siguiente: from django.urls import include
+-creamos el path: path('clientes/', include('Apps.cientes.urls')),
+-luego se crea el archivo url ara cada tabla y se pega el siguiente codigo:
+from django.urls import path
+from Apps.clientes.views import ClienteList, ClienteDetail
+
+app_name = "clientes"
+urlpatterns = [
+    path('', ClienteList.as_view()),
+    path('<int:pk>', ClienteDetail.as_view()),
+]
+
+*ahora crearemos las vistas:
+-entramos en la carpeta de la tabla el archivo views.py
+-peguamos lo siguiente:
+
+
+from django.shortcuts import render
+from django.http import Http404
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from rest_framework import status
+
+from Apps.clientes.models import Clientes
+from Apps.clientes.serializers import ClienteSerializer
+
+# Create your views here.
+
+from django.shortcuts import render
+from django.http import Http404
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from rest_framework import status
+
+from Apps.clientes.models import Clientes
+from Apps.clientes.serializers import ClienteSerializer
+
+# Create your views here.
+
+
+class ClienteList(APIView):
+    """
+    Lista de Clientes
+    """
+
+    def get(self, request, format=None):
+        cliente = Clientes.objects.all()
+        # data = {"results": list(clientes.values("nombreCliente", "direccionCliente", "telefonoCliente", "correoCliente", "passwordCliente"))}
+        # print(data)
+        # return JsonResponse(data)
+        serializer = ClienteSerializer(cliente, many=True)
+        return Response({"cliente":serializer.data})
+
+    def post(self, request, format=None):
+        serializer = ClienteSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ClienteDetail(APIView):
+    """
+    Retrieve, update or delete de los clientes por pk
+    """
+    def get_object(self, pk):
+        # Returns an object instance that should 
+        # be used for detail views.
+        try:
+            return Clientes.objects.get(pk=pk)
+        except Clientes.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        cliente = self.get_object(pk)
+        serializer = ClienteSerializer(cliente)
+        return Response({"cliente":serializer.data})
+
+    def put(self, request, pk, format=None):
+        cliente = self.get_object(pk)
+        serializer = ClienteSerializer(cliente, data=request.data)  
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk, format=None):
+        cliente = self.get_object(pk)
+        serializer = ClienteSerializer(cliente,
+                                           data=request.data,
+                                           partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request, pk, format=None):
+        cliente = self.get_object(pk)
+        cliente.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+//-----------------------------//
+ahora crearemos los modelos
+*Primero se debe instalar las extensiones en Django que permiten comunicarse con el motor de la base de datos.
+*Para este caso utilizaremos MySql, por lo cual instalamos en la carpeta venv:
+-mysqlclient
+-python -m pip install mysqlclient
+*ingresamos a la sigueinte ruta:
+-sitealmacen/sitealmacen/settings.py=> donde site almacen es el nombre de la base de datos
+-y ajustamos los parametros
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'almacen2022_mysql', => cambiar por el nombre de la base de datos ya creada anteriro mente sin tablas
+        'USER': 'root',=>usuario del phpmyadmin
+        'PASSWORD': 'MiNiCo57**',=>contraseña del phpmyadmin
+        'HOST': 'localhost',
+        'PORT': '3306'
+
+    }
+}
+
+*luego en la carpeta padre de django en el cmd pondremos lo siguiente:
+-python manage.py makemigrations => Crea las migraciones
+-python manage.py migrate ==> Crea la base de datos físicamente, de acuerdo a las migraciones actuales.
+
+
+*para crear los modelos antramos a la siguiente ruta Apps/clients/models.py
+*se pega el siguiete codigo
+
+from django.db import models
+
+# Create your models here.
+class Clientes(models.Model):
+    nombre = models.CharField(max_length=100, help_text="Ingrese el  nombre del cliente")
+    apellido = models.CharField(max_length=100, help_text="Ingrese el apellido del cliente")
+    direccion = models.CharField(max_length=100, help_text="Ingrese la direccion del cliente")
+    telefono = models.CharField(max_length=100, help_text="Ingrese el numero telefonico del cliente")
+    email = models.EmailField(max_length=300, help_text="Ingrese el Email del cliente")
+
+
+    def __str__(self):
+        return self.nombre11
+
+    class Meta:
+        verbose_name = "cliente"
+        verbose_name_plural = "clientes"
+
+en este caso se debe cambiar cada variable al que debe tener la tabla y su respectivo parametro
+*ya creado los modelos pondremos las llaves foraneas
+-cuando la relacion es de uno a uno se hace de la siguiente forma:
+-marca = models.OneToOneField(Perfil, on_delate=models.CASCADE) => en este caso marca es la otra tabla y perfil la tabla donde hacemos la FK
+ademas en las relaciones de uno a uno se debe hacer la union en las dos tablas
+si las tablas se encuentran en archivos diferentes debes exportar una para poder importarla en otra
+-exportar => from django.db import models => eso se crea por defecto
+-importar => from Apps.perfil.models imprt Perfil
+
+-cuando la relacion es de muchos a uno se hace de la siguiente forma.
+-marcas = models.ForeignKey(Marcas, on_delate=models.CASCADE, default=None, blank=False) => en este caso  marcas es una variable que hace referencia a la FK y Marcas es el nombre del modelo
+
+*luego volvemos a hacer la migracion
+python manage.py makemigrations => Crea las migraciones
+-python manage.py migrate ==> Crea la base de datos físicamente, de acuerdo a las migraciones actuales.
+
+//------------------------------//
+ahora haremos los administradores de la base
+*Primero verificar que en el archivo sitealmacen/sitealmacen/settings.py dentro de INSTALLED_APPS, se encuentre la librería 'django.contrib.admin',
+*desoues de ver que esta se pondra el siguiente codigo en el cmd estando en la carpeta padre de django
+-python manage.py createsuperuser
+nos pedira un nombre de usuario y una contraseña
+//--------------------//
+ahora registraremos los modelos
+*Primero se registra en cada Aplicación (Clientes, Productos y Ventas) en el archivo admin.py de cada aplicación, es decir:
+-Apps/clientes/admin.py
+-Apps/ventas/admin.py
+
+se puede usar los sigueintes codigos con su explicacion todo depende que se quiera:
+from django.contrib import admin
+from Apps.clientes.models import Clientes
+# Register your models here.
+
+class ClienteAdmin(admin.ModelAdmin):
+    list_display = ('nombre','apellido' ,'direccion', 'telefono', 'email')
+    search_fields = ('nombre','email')
+    list_filter = ('nombre', 'email','direccion')
+
+admin.site.register(Clientes, ClienteAdmin)
+
+
+explicacion:
+-from django.contrib import admin: Esta línea importa el módulo admin de Django, que contiene las clases y funciones relacionadas con la administración del sitio.
+
+-from Apps.clientes.models import Cliente: Esta línea importa el modelo Cliente desde la aplicación clientes (ubicada en el directorio Apps) y su respectivo
+ archivo models.py. Esto significa que se espera que exista una aplicación llamada clientes en tu proyecto de Django y que tenga un archivo models.py que
+ define el modelo Cliente.
+
+-class ClienteAdmin(admin.ModelAdmin): Aquí se define una clase llamada ClienteAdmin que hereda de admin.ModelAdmin. Esta clase se utiliza para personalizar
+ la apariencia y el comportamiento del modelo Cliente en el panel de administración.
+
+-admin.site.register(Cliente, ClienteAdmin): Esta línea registra el modelo Cliente en el panel de administración de Django. Al hacerlo, se asocia el modelo
+ Cliente con la clase ClienteAdmin, lo que permite personalizar su apariencia y comportamiento en el panel de administración.
+
+
+*el view pedira algo llamado serializer.py este archivo no existe asi que se debe crear en la carpeta cliente y se pegara en el, el siguiente codigo:
+from dataclasses import field
+from statistics import mode
+
+from rest_framework import serializers
+from Apps.clientes.models import Clientes
+
+class ClienteSerializer(serializers.ModelSerializer):
+    # len_nombreCliente = serializers.SerializerMethodField()
+    class Meta:
+        model = Clientes
+        fields = "__all__"
+        # exclude = ['passwordCliente']
+        # fields = (
+        #     'pk',
+        #     'nombreCliente',
+        #     'direccionCliente',
+        #     'telefonoCliente',
+        #     'correoCliente',
+        #     'passwordCliente',
+        # )
+
+    # def get_len_nombreCliente(self, object):
+    #     length = len(object.nombreCliente)
+    #     return length
+
+    # def validate(self, data):
+    #     if data['nombreCliente'] == data['direccionCliente']:
+    #         raise serializers.ValidationError('Nombre y Correo No pueden ser iguales')
+    #     else:
+    #         return data
+
+    # def validate_nombreCliente(self, value):
+    #     if len(value) < 3:
+    #         raise serializers.ValidationError('Nombre no puede ser tan corto')
+    #     else:
+    #         return value
+
+    # def validate_passwordCliente(self, value):
+    #     if len(value) < 8:
+    #         raise serializers.ValidationError('El Password debe tener mayor de 8 caracteres')
+    #     else:
+    #         return value
+
+
+para finalizar solo se debe configurar el cors
+
+pegaremos el siguiente codio en el cmd
+pip install django-cors-headers
+
+En settings.py , agregue la configuración para CORS:
+INSTALLED_APPS = [
+    ...
+    # CORS
+    'corsheaders',
+]
+
+También debe agregar una clase de middleware para escuchar las respuestas:
+MIDDLEWARE = [
+    ...
+    # CORS
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+]

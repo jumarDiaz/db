@@ -1,0 +1,31 @@
+<p-table [value]="coches">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>ID</th>
+            <th>Modelo</th>
+            <th>Color</th>
+            <th>Año</th>
+            <th>Precio</th>
+            <th>Marca</th>
+            <th>Editar</th>
+
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-coches>
+        <tr>
+            <td>{{coches.id}}</td>
+            <td>{{coches.modelo}}</td>
+            <td>{{coches.color}}</td>
+            <td>{{coches.ano}}</td>
+            <td>{{coches.precio}}</td>
+            <td>{{coches.marca.nombre}}</td>
+            <td><a pButton
+                pRipple
+                icon="pi pi-pencil"
+                class="by-cyan-600 mr-1"
+                [routerLink]="['edit/',coches.id]">
+            </a>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
